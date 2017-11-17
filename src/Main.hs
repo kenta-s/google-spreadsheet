@@ -39,13 +39,10 @@ fetchAccessToken = do
   let accessTokenRes = (HS.getResponseBody res :: AccessTokenResponse)
   return $ access_token accessTokenRes
 
-fetchValueRanges :: IO [ValueRange]
-fetchValueRanges = do
+fetchValueRanges :: String -> String -> IO [ValueRange]
+fetchValueRanges sheetId ranges = do
   token <- fetchAccessToken
-  args <- getArgs
   let token' = "Bearer " ++ (Data.Text.unpack token)
-  let sheetId = Prelude.head args
-      ranges = Prelude.last args
   req <- HS.parseRequest $ "https://sheets.googleapis.com/v4/spreadsheets/" ++ sheetId ++ "/values:batchGet?ranges=" ++ ranges
   let req' = HS.setRequestHeader "Authorization" [S8.pack token'] req
   res <- HS.httpJSON req'
@@ -53,6 +50,9 @@ fetchValueRanges = do
 
 main :: IO ()
 main = do
-  ranges <- fetchValueRanges
-  putStrLn $ Data.Text.unpack $ Prelude.head $ Prelude.tail $ Prelude.head $ values $ Prelude.head $ ranges
-  print $ Prelude.head $ Prelude.tail $ Prelude.head $ values $ Prelude.head $ ranges
+  args <- getArgs
+  let sheetId = Prelude.head args
+      ranges = Prelude.last args
+  ranges' <- fetchValueRanges sheetId ranges
+  putStrLn $ Data.Text.unpack $ Prelude.head $ Prelude.tail $ Prelude.head $ values $ Prelude.head $ ranges'
+  print $ Prelude.head $ Prelude.tail $ Prelude.head $ values $ Prelude.head $ ranges'
