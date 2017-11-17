@@ -16,11 +16,11 @@ data AccessTokenResponse = AccessTokenResponse {
 } deriving (Generic, Show)
 instance FromJSON AccessTokenResponse
 
-data SubmittedData = SubmittedData {
+data ValueRanges = ValueRanges {
   spreadsheetId :: Text,
   valueRanges :: [ValueRange]
 } deriving (Generic, Show)
-instance FromJSON SubmittedData
+instance FromJSON ValueRanges
 
 data ValueRange = ValueRange {
   values :: [[Text]]
@@ -39,16 +39,20 @@ fetchAccessToken = do
   let accessTokenRes = (HS.getResponseBody res :: AccessTokenResponse)
   return $ access_token accessTokenRes
 
-main :: IO ()
-main = do
+fetchValueRanges :: IO [ValueRange]
+fetchValueRanges = do
   token <- fetchAccessToken
-  let token' = "Bearer " ++ (Data.Text.unpack token)
   args <- getArgs
+  let token' = "Bearer " ++ (Data.Text.unpack token)
   let sheetId = Prelude.head args
       ranges = Prelude.last args
   req <- HS.parseRequest $ "https://sheets.googleapis.com/v4/spreadsheets/" ++ sheetId ++ "/values:batchGet?ranges=" ++ ranges
   let req' = HS.setRequestHeader "Authorization" [S8.pack token'] req
   res <- HS.httpJSON req'
-  let dataList = HS.getResponseBody res :: SubmittedData
-  putStrLn $ Data.Text.unpack $ Prelude.head $ Prelude.tail $ Prelude.head $ values $ Prelude.head $ valueRanges dataList
-  print $ Prelude.head $ Prelude.tail $ Prelude.head $ values $ Prelude.head $ valueRanges dataList
+  return $ valueRanges (HS.getResponseBody res :: ValueRanges)
+
+main :: IO ()
+main = do
+  ranges <- fetchValueRanges
+  putStrLn $ Data.Text.unpack $ Prelude.head $ Prelude.tail $ Prelude.head $ values $ Prelude.head $ ranges
+  print $ Prelude.head $ Prelude.tail $ Prelude.head $ values $ Prelude.head $ ranges
