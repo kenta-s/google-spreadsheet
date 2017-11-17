@@ -8,10 +8,8 @@ import           GHC.Generics
 import qualified Data.ByteString.Char8 as S8
 import qualified Network.HTTP.Simple   as HS
 import qualified Network.HTTP.Conduit  as HC
-import           System.Environment    (getEnv)
+import           System.Environment    (getEnv, getArgs)
 import           Data.Text
--- import qualified Data.Text.Encoding
--- import           Data.ByteString.UTF8
 
 data AccessTokenResponse = AccessTokenResponse {
   access_token :: Text
@@ -45,12 +43,12 @@ main :: IO ()
 main = do
   token <- fetchAccessToken
   let token' = "Bearer " ++ (Data.Text.unpack token)
-  let sheetId = "sheet id"
-  req <- HS.parseRequest $ "https://sheets.googleapis.com/v4/spreadsheets/" ++ sheetId ++ "/values:batchGet?ranges=B2:C100"
-  -- let req' = HS.setRequestHeader "Authorization" [S8.pack token'] req
-  let req' = HS.setRequestHeaders [("Authorization", (S8.pack token')), ("Content-Type", "charset=utf-8")] req
+  args <- getArgs
+  let sheetId = Prelude.head args
+      ranges = Prelude.last args
+  req <- HS.parseRequest $ "https://sheets.googleapis.com/v4/spreadsheets/" ++ sheetId ++ "/values:batchGet?ranges=" ++ ranges
+  let req' = HS.setRequestHeader "Authorization" [S8.pack token'] req
   res <- HS.httpJSON req'
-  -- res <- HS.httpLbs req'
   let dataList = HS.getResponseBody res :: SubmittedData
+  putStrLn $ Data.Text.unpack $ Prelude.head $ Prelude.tail $ Prelude.head $ values $ Prelude.head $ valueRanges dataList
   print $ Prelude.head $ Prelude.tail $ Prelude.head $ values $ Prelude.head $ valueRanges dataList
-  -- print $ HS.getResponseBody res
