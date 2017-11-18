@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 module Main where
 
 import Web.Spock
@@ -8,15 +9,19 @@ import Control.Monad.Trans
 import Data.Monoid
 import Data.IORef
 import qualified Data.Text as T
+import Spreadsheet.Reader
+import System.Environment  (getEnv, getArgs)
+import Data.Aeson          hiding(json)
+import GHC.Generics
 
 data MySession = EmptySession
 data MyAppState = DummyAppState (IORef Int)
 
 main :: IO ()
-main =
-    do ref <- newIORef 0
-       spockCfg <- defaultSpockCfg EmptySession PCNoDatabase (DummyAppState ref)
-       runSpock 8080 (spock spockCfg app)
+main = do
+    ref <- newIORef 0
+    spockCfg <- defaultSpockCfg EmptySession PCNoDatabase (DummyAppState ref)
+    runSpock 8080 (spock spockCfg app)
 
 app :: SpockM () MySession MyAppState ()
 app =

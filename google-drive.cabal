@@ -13,6 +13,16 @@ build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
 
+library
+  hs-source-dirs:      spreadsheet-reader/src
+  exposed-modules:     Spreadsheet.Reader
+  build-depends:       base >= 4.7 && < 5
+                     , aeson
+                     , text
+                     , http-conduit
+                     , bytestring
+  default-language:    Haskell2010
+
 executable google-drive
   hs-source-dirs:      app
   main-is:             Main.hs
@@ -21,3 +31,5 @@ executable google-drive
                      , Spock >= 0.11
                      , mtl
                      , text
+                     , google-drive
+                     , aeson
