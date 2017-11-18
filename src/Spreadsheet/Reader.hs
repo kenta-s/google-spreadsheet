@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module Spreadsheet.Reader (fetchValueRanges, values) where
+module Spreadsheet.Reader (fetchValueRanges) where
 
 import           Data.Aeson
 import           GHC.Generics
@@ -39,11 +39,11 @@ fetchAccessToken = do
   let accessTokenRes = (HS.getResponseBody res :: AccessTokenResponse)
   return $ access_token accessTokenRes
 
-fetchValueRanges :: String -> String -> IO [ValueRange]
+fetchValueRanges :: String -> String -> IO [[Text]]
 fetchValueRanges sheetId ranges = do
   token <- fetchAccessToken
   let token' = "Bearer " ++ (Data.Text.unpack token)
   req <- HS.parseRequest $ "https://sheets.googleapis.com/v4/spreadsheets/" ++ sheetId ++ "/values:batchGet?ranges=" ++ ranges
   let req' = HS.setRequestHeader "Authorization" [S8.pack token'] req
   res <- HS.httpJSON req'
-  return $ valueRanges (HS.getResponseBody res :: ValueRanges)
+  return $ values $ Prelude.head $ valueRanges (HS.getResponseBody res :: ValueRanges)

@@ -11,8 +11,7 @@ main = do
   let sheetId = Prelude.head args
       ranges = Prelude.last args
   ranges' <- fetchValueRanges sheetId ranges
-  let vs = values $ Prelude.head ranges'
-  printAllValues vs
+  printAllValues ranges'
 
 printAllValues :: [[Text]] -> IO ()
 printAllValues [x] = printValue x
