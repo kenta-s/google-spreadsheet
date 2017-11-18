@@ -17,6 +17,12 @@ import GHC.Generics
 data MySession = EmptySession
 data MyAppState = DummyAppState (IORef Int)
 
+data SpreadsheetResult = SpreadsheetResult {
+  sheetresult :: [[T.Text]]
+} deriving (Generic, Show)
+instance ToJSON SpreadsheetResult
+instance FromJSON SpreadsheetResult
+
 main :: IO ()
 main = do
     ref <- newIORef 0
@@ -31,3 +37,8 @@ app =
            do (DummyAppState ref) <- getState
               visitorNumber <- liftIO $ atomicModifyIORef' ref $ \i -> (i+1, i+1)
               text ("Hello " <> name <> ", you are visitor number " <> T.pack (show visitorNumber))
+
+       get ("spreadsheet" <//> var <//> var) $ \sheetId range ->
+           do (DummyAppState ref) <- getState
+              results <- liftIO $ fetchValueRanges (T.unpack sheetId) (T.unpack range)
+              json results
